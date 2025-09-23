@@ -1,0 +1,28 @@
+name: Send Telegram Report
+
+on:
+  schedule:
+    - cron: '30 7 * * *'   # 10:30 МСК (7:30 UTC)
+    - cron: '0 12 * * *'   # 15:00 МСК (12:00 UTC)
+    - cron: '0 18 * * *'   # 21:00 МСК (18:00 UTC)
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pytz requests
+
+      - name: Run script
+        run: python report.py
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
