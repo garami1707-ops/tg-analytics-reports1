@@ -35,3 +35,4 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           KIND: ${{ github.event.inputs.kind || 'daily' }}
         run: python report.py
+
