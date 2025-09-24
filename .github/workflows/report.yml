@@ -2,27 +2,36 @@ name: Send Telegram Report
 
 on:
   schedule:
-    - cron: '30 7 * * *'   # 10:30 МСК (7:30 UTC)
-    - cron: '0 12 * * *'   # 15:00 МСК (12:00 UTC)
-    - cron: '0 18 * * *'   # 21:00 МСК (18:00 UTC)
+    # GitHub Actions работает по UTC. Москва = UTC+3.
+    - cron: '30 7 * * *'   # 10:30 МСК
+    - cron: '0 12 * * *'   # 15:00 МСК
+    - cron: '0 18 * * *'   # 21:00 МСК
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 'Тип отчёта: daily | weekly | monthly'
+        required: true
+        default: 'daily'
 
 jobs:
-  send-report:
+  send:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install deps
         run: pip install pytz requests
 
-      - name: Run script
-        run: python report.py
+      - name: Run report
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          KIND: ${{ github.event.inputs.kind || 'daily' }}
+        run: python report.py
