@@ -2,16 +2,18 @@ name: Send Telegram Reports
 
 on:
   schedule:
-    # Ежедневно в 10:30, 15:00 и 21:00 МСК (UTC+3)
-    - cron: '30 7 * * *'   # 10:30 МСК
-    - cron: '0 12 * * *'   # 15:00 МСК
-    - cron: '0 18 * * *'   # 21:00 МСК
+    # Ежедневно в 10:30, 15:00 и 19:00 МСК
+    - cron: '30 7 * * *'   # 10:30 МСК (07:30 UTC)
+    - cron: '0 12 * * *'   # 15:00 МСК (12:00 UTC)
+    - cron: '0 16 * * *'   # 19:00 МСК (16:00 UTC)
+
     # Еженедельно — каждое воскресенье в 12:00 МСК
-    - cron: '0 9 * * 0'    # 12:00 МСК (воскресенье)
+    - cron: '0 9 * * 0'    # 12:00 МСК (09:00 UTC)
+
     # Ежемесячно — 30-го числа в 12:00 МСК
-    - cron: '0 9 30 * *'   # 12:00 МСК (30 число)
-    # Для февраля на 28-е число можно сделать отдельный cron:
-    - cron: '0 9 28 2 *'   # 12:00 МСК (28 февраля)
+    - cron: '0 9 30 * *'   # 12:00 МСК (09:00 UTC)
+    - cron: '0 9 28 2 *'   # 12:00 МСК (28 февраля, 09:00 UTC)
+
   workflow_dispatch:
     inputs:
       kind:
@@ -39,7 +41,7 @@ jobs:
         run: |
           if [[ "${{ github.event.schedule }}" == "30 7 * * *" || \
                 "${{ github.event.schedule }}" == "0 12 * * *" || \
-                "${{ github.event.schedule }}" == "0 18 * * *" ]]; then
+                "${{ github.event.schedule }}" == "0 16 * * *" ]]; then
             echo "kind=daily" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event.schedule }}" == "0 9 * * 0" ]]; then
             echo "kind=weekly" >> $GITHUB_OUTPUT
