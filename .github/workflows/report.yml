@@ -1,11 +1,17 @@
-name: Send Telegram Report
+name: Send Telegram Reports
 
 on:
   schedule:
-    # GitHub Actions работает по UTC. Москва = UTC+3.
+    # Ежедневно в 10:30, 15:00 и 21:00 МСК (UTC+3)
     - cron: '30 7 * * *'   # 10:30 МСК
     - cron: '0 12 * * *'   # 15:00 МСК
     - cron: '0 18 * * *'   # 21:00 МСК
+    # Еженедельно — каждое воскресенье в 12:00 МСК
+    - cron: '0 9 * * 0'    # 12:00 МСК (воскресенье)
+    # Ежемесячно — 30-го числа в 12:00 МСК
+    - cron: '0 9 30 * *'   # 12:00 МСК (30 число)
+    # Для февраля на 28-е число можно сделать отдельный cron:
+    - cron: '0 9 28 2 *'   # 12:00 МСК (28 февраля)
   workflow_dispatch:
     inputs:
       kind:
@@ -14,7 +20,7 @@ on:
         default: 'daily'
 
 jobs:
-  send:
+  send-report:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,11 +34,26 @@ jobs:
       - name: Install deps
         run: pip install pytz requests
 
+      - name: Define KIND
+        id: kind
+        run: |
+          if [[ "${{ github.event.schedule }}" == "30 7 * * *" || \
+                "${{ github.event.schedule }}" == "0 12 * * *" || \
+                "${{ github.event.schedule }}" == "0 18 * * *" ]]; then
+            echo "kind=daily" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.schedule }}" == "0 9 * * 0" ]]; then
+            echo "kind=weekly" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.schedule }}" == "0 9 30 * *" || \
+                  "${{ github.event.schedule }}" == "0 9 28 2 *" ]]; then
+            echo "kind=monthly" >> $GITHUB_OUTPUT
+          else
+            echo "kind=${{ github.event.inputs.kind }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run report
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          KIND: ${{ github.event.inputs.kind || 'daily' }}
+          KIND: ${{ steps.kind.outputs.kind }}
         run: python report.py
-
